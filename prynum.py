@@ -6,6 +6,10 @@ import pytz
 import re
 import pandas as pd
 from tabulate import tabulate
+from colorama import init, Fore, Style
+
+# Initialize colorama
+init(autoreset=True)
 
 # Timezone mapping for the conversions
 TIMEZONE_MAP = {
@@ -19,6 +23,15 @@ TIMEZONE_MAP = {
     'pdt': 'America/Los_Angeles',
     'gmt': 'Etc/GMT',
     'bst': 'Europe/London'
+}
+
+# Define colors for different time zones
+COLORS = {
+    'yellow': Fore.YELLOW,
+    'cyan': Fore.CYAN, 
+    'green': Fore.GREEN,
+    'pink': Fore.MAGENTA,
+    'reset': Style.RESET_ALL
 }
 
 def parse_number(number):
@@ -105,32 +118,70 @@ def extract_numbers_from_xlsx(file_path):
         phone_numbers.extend(df[column].dropna().astype(str).tolist())
     return [num for num in phone_numbers if re.search(r'\+?\d{10,15}', num)]
 
-def print_table(results, convert_label):
-    """Print the results in a tabular format."""
+def colorize_table(results, convert_label):
+    """Apply colors to the table based on time zones."""
+    colored_table = []
     headers = ["Number", "City", "Timezone", "Current Time", "GMT Offset"]
     if convert_label:
         headers.append(f"Current Time for {convert_label}")
-    
-    table = []
+
     for result in results:
         row = [result['number'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
         if convert_label:
             row.append(result.get('converted_time', ''))
-        table.append(row)
-    
-    return tabulate(table, headers=headers, tablefmt='grid')
+        timezone = result['short_tz']
 
-def print_line_by_line(results, convert_label):
+        # Determine row color based on timezone
+        color = COLORS['reset']
+        if 'PST' in timezone or 'PDT' in timezone:
+            color = COLORS['yellow']
+        elif 'CST' in timezone:
+            color = COLORS['cyan']
+        elif 'MST' in timezone or 'MDT' in timezone:
+            color = COLORS['green']
+        elif 'EST' in timezone or 'EDT' in timezone:
+            color = COLORS['pink']
+
+        colored_row = [color + str(cell) + COLORS['reset'] for cell in row]
+        colored_table.append(colored_row)
+    
+    return tabulate(colored_table, headers=headers, tablefmt='grid')
+
+def print_table(results, convert_label, pretty):
+    """Print the results in a tabular format."""
+    if pretty:
+        table_str = colorize_table(results, convert_label)
+    else:
+        headers = ["Number", "City", "Timezone", "Current Time", "GMT Offset"]
+        if convert_label:
+            headers.append(f"Current Time for {convert_label}")
+        
+        table = []
+        for result in results:
+            row = [result['number'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
+            if convert_label:
+                row.append(result.get('converted_time', ''))
+            table.append(row)
+        
+        table_str = tabulate(table, headers=headers, tablefmt='grid')
+    
+    return table_str
+
+def print_line_by_line(results, convert_label, pretty):
     """Print the results line by line."""
     lines = []
     for result in results:
         line = f"Number: {result['number']}, City: {result['city']}, Time: {result['local_time']}, Timezone: {result['short_tz']}, GMT Offset: {result['gmt_offset']}"
         if convert_label:
             line += f", Time for {convert_label}: {result.get('converted_time', '')}"
+        
+        if pretty:
+            line = colorize_line(line, result['short_tz'])
+        
         lines.append(line)
     return '\n'.join(lines)
 
-def print_default(results, convert_label):
+def print_default(results, convert_label, pretty):
     """Print the results in the default format."""
     lines = []
     for result in results:
@@ -142,8 +193,26 @@ def print_default(results, convert_label):
         if convert_label:
             line += f"\nTime for {convert_label}: {result.get('converted_time', '')}"
         line += f"\n----------------------------------------"
+        
+        if pretty:
+            line = colorize_line(line, result['short_tz'])
+        
         lines.append(line)
     return '\n'.join(lines)
+
+def colorize_line(line, timezone):
+    """Apply colors to the line based on timezone."""
+    color = COLORS['reset']
+    if 'PST' in timezone or 'PDT' in timezone:
+        color = COLORS['yellow']
+    elif 'CST' in timezone:
+        color = COLORS['cyan']
+    elif 'MST' in timezone or 'MDT' in timezone:
+        color = COLORS['green']
+    elif 'EST' in timezone or 'EDT' in timezone:
+        color = COLORS['pink']
+    
+    return f"{color}{line}{COLORS['reset']}"
 
 def print_banner():
     """Print an ASCII banner."""
@@ -154,7 +223,7 @@ def print_banner():
 (__...--'' |   /`. '   \  `.'  / |   \ |  |\ |  | |  |   |   `.'   | 
  |  /  | | |  /  | | .-')     /  |    \|  | )|  | | .-') |         | 
  |  |_.' | |  |_.' |(OO  \   /   |  .     |/ |  |_|( OO )|  |'.'|  | 
- |  .___.' |  .  '.' |   /  /\_  |  |\    |  |  | | `-' /|  |   |  | 
+ |  .___.' |  .  '.' |   /  /\_  |  |\    | ('  '-'(_.-' |  |   |  | 
  |  |      |  |\  \  `-./  /.__) |  | \   | ('  '-'(_.-' |  |   |  | 
  `--'      `--' '--'   `--'      `--'  `--'   `-----'    `--'   `--' 
     Phone Number Prying Tool         
@@ -176,6 +245,7 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', help='Print the data to stdout and to a file.')
     parser.add_argument('-s', '--sort', type=str, choices=['city', 'local_time'], help='Sort the output based on the specified column.')
     parser.add_argument('-c', '--convert', type=str, choices=['est', 'edt', 'cst', 'cdt', 'mst', 'mdt', 'pst', 'pdt', 'gmt', 'bst'], help='Convert local time to target time zone (e.g., "bst" for British Summer Time, "edt" for Eastern Daylight Time).')
+    parser.add_argument('-p', '--pretty', action='store_true', help='Print colored output based on time zone.')
     parser.add_argument('--no-banner', action='store_true', help='Disable the ASCII banner.')
     args = parser.parse_args()
 
@@ -258,11 +328,11 @@ def main():
     convert_label = args.convert.upper() if args.convert else ''
 
     if args.table:
-        output_data = print_table(results, convert_label)
+        output_data = print_table(results, convert_label, args.pretty)
     elif args.line:
-        output_data = print_line_by_line(results, convert_label)
+        output_data = print_line_by_line(results, convert_label, args.pretty)
     else:
-        output_data = print_default(results, convert_label)
+        output_data = print_default(results, convert_label, args.pretty)
     
     if not args.no_banner:
         print_banner()
