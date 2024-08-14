@@ -248,7 +248,7 @@ def main():
     parser.add_argument('-f', '--format', choices=['table', 'list', 'default'], default='default', help='Output format: "table", "list", or "default".')
     parser.add_argument('-o', '--output', type=str, help='File to write the output data to.')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print the data to stdout and to a file.')
-    parser.add_argument('-s', '--sort', type=str, choices=['city', 'local_time'], help='Sort the output based on the specified column.')
+    parser.add_argument('-s', '--sort', type=str, choices=['state', 'city', 'local_time'], help='Sort the output based on the specified column.')
     parser.add_argument('-c', '--convert', type=str, choices=['est', 'edt', 'cst', 'cdt', 'mst', 'mdt', 'pst', 'pdt', 'gmt', 'bst'], help='Convert local time to target time zone (e.g., "bst" for British Summer Time, "edt" for Eastern Daylight Time).')
     parser.add_argument('-p', '--pretty', action='store_true', help='Print colored output based on time zone.')
     parser.add_argument('--no-banner', action='store_true', help='Disable the ASCII banner.')
@@ -327,7 +327,9 @@ def main():
 
     # Sort results if -s argument is provided
     if args.sort:
-        if args.sort == 'city':
+        if args.sort == 'state':
+            results.sort(key=lambda x: x['state'])
+        elif args.sort == 'city':
             results.sort(key=lambda x: x['city'])
         elif args.sort == 'local_time':
             results.sort(key=lambda x: x['local_time'])
