@@ -255,7 +255,7 @@ def main():
     args = parser.parse_args()
 
     if args.numbers is None and args.input is None:
-        parser.error("No input provided. Use -n for numbers or -f for file input.")
+        parser.error("No input provided. Use -n for numbers or -i for file input.")
     
     # Load area codes from local file
     area_codes_file = os.path.join(SCRIPT_DIR, 'definitions', 'area_codes.json')
