@@ -11,6 +11,9 @@ from colorama import init, Fore, Style
 # Initialize colorama
 init(autoreset=True)
 
+# Get the directory of the current script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Timezone mapping for the conversions
 TIMEZONE_MAP = {
     'est': 'America/New_York',
@@ -121,12 +124,12 @@ def extract_numbers_from_xlsx(file_path):
 def colorize_table(results, convert_label):
     """Apply colors to the table based on time zones."""
     colored_table = []
-    headers = ["Number", "City", "Timezone", "Current Time", "GMT Offset"]
+    headers = ["Number", "State", "City", "Timezone", "Current Time", "GMT Offset"]
     if convert_label:
         headers.append(f"Current Time for {convert_label}")
 
     for result in results:
-        row = [result['number'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
+        row = [result['number'], result['state'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
         if convert_label:
             row.append(result.get('converted_time', ''))
         timezone = result['short_tz']
@@ -147,18 +150,19 @@ def colorize_table(results, convert_label):
     
     return tabulate(colored_table, headers=headers, tablefmt='grid')
 
+
 def print_table(results, convert_label, pretty):
     """Print the results in a tabular format."""
     if pretty:
         table_str = colorize_table(results, convert_label)
     else:
-        headers = ["Number", "City", "Timezone", "Current Time", "GMT Offset"]
+        headers = ["Number", "State", "City", "Timezone", "Current Time", "GMT Offset"]
         if convert_label:
             headers.append(f"Current Time for {convert_label}")
         
         table = []
         for result in results:
-            row = [result['number'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
+            row = [result['number'], result['state'], result['city'], result['short_tz'], result['local_time'], result['gmt_offset']]
             if convert_label:
                 row.append(result.get('converted_time', ''))
             table.append(row)
@@ -167,11 +171,11 @@ def print_table(results, convert_label, pretty):
     
     return table_str
 
-def print_line_by_line(results, convert_label, pretty):
+def print_list(results, convert_label, pretty):
     """Print the results line by line."""
     lines = []
     for result in results:
-        line = f"Number: {result['number']}, City: {result['city']}, Time: {result['local_time']}, Timezone: {result['short_tz']}, GMT Offset: {result['gmt_offset']}"
+        line = f"Number: {result['number']}, State: {result['state']}, City: {result['city']}, Time: {result['local_time']}, Timezone: {result['short_tz']}, GMT Offset: {result['gmt_offset']}"
         if convert_label:
             line += f", Time for {convert_label}: {result.get('converted_time', '')}"
         
@@ -187,6 +191,7 @@ def print_default(results, convert_label, pretty):
     for result in results:
         line = (f"----------------------------------------\n"
                 f"Number: {result['number']}\n"
+                f"State: {result['state']}\n"
                 f"City: {result['city']}\n"
                 f"Timezone: {result['short_tz']} (GMT{result['gmt_offset']})\n"
                 f"Current Time: {result['local_time']}")
@@ -199,6 +204,7 @@ def print_default(results, convert_label, pretty):
         
         lines.append(line)
     return '\n'.join(lines)
+
 
 def colorize_line(line, timezone):
     """Apply colors to the line based on timezone."""
@@ -238,9 +244,8 @@ def write_to_file(data, file_path):
 def main():
     parser = argparse.ArgumentParser(description="Process US phone numbers.")
     parser.add_argument('-n', '--numbers', nargs='*', help='List of phone numbers.')
-    parser.add_argument('-f', '--file', type=str, help='File containing phone numbers (TXT, CSV, XLSX).')
-    parser.add_argument('-t', '--table', action='store_true', help='Print the data in a table format.')
-    parser.add_argument('-l', '--line', action='store_true', help='Print the data line by line.')
+    parser.add_argument('-i', '--input', type=str, help='File containing phone numbers (TXT, CSV, XLSX).')
+    parser.add_argument('-f', '--format', choices=['table', 'list', 'default'], default='default', help='Output format: "table", "list", or "default".')
     parser.add_argument('-o', '--output', type=str, help='File to write the output data to.')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print the data to stdout and to a file.')
     parser.add_argument('-s', '--sort', type=str, choices=['city', 'local_time'], help='Sort the output based on the specified column.')
@@ -249,11 +254,11 @@ def main():
     parser.add_argument('--no-banner', action='store_true', help='Disable the ASCII banner.')
     args = parser.parse_args()
 
-    if args.numbers is None and args.file is None:
+    if args.numbers is None and args.input is None:
         parser.error("No input provided. Use -n for numbers or -f for file input.")
     
     # Load area codes from local file
-    area_codes_file = './definitions/area_codes.json'
+    area_codes_file = os.path.join(SCRIPT_DIR, 'definitions', 'area_codes.json')
     if not os.path.isfile(area_codes_file):
         print(f"Error: The file {area_codes_file} does not exist.")
         return
@@ -261,14 +266,14 @@ def main():
     area_codes = load_area_codes(area_codes_file)['US']
 
     phone_numbers = []
-    if args.file:
-        file_ext = os.path.splitext(args.file)[1].lower()
+    if args.input:
+        file_ext = os.path.splitext(args.input)[1].lower()
         if file_ext == '.txt':
-            phone_numbers = extract_numbers_from_txt(args.file)
+            phone_numbers = extract_numbers_from_txt(args.input)
         elif file_ext == '.csv':
-            phone_numbers = extract_numbers_from_csv(args.file)
+            phone_numbers = extract_numbers_from_csv(args.input)
         elif file_ext == '.xlsx':
-            phone_numbers = extract_numbers_from_xlsx(args.file)
+            phone_numbers = extract_numbers_from_xlsx(args.input)
         else:
             print(f"Error: Unsupported file format {file_ext}.")
             return
@@ -280,7 +285,8 @@ def main():
         area_code = parse_number(number)
         if area_code in area_codes:
             data = area_codes[area_code]
-            city = data['city']
+            city = data.get('city', 'Unknown City')  # Handle missing 'city'
+            state = data.get('state', 'Unknown State')  # Handle missing 'state'
             timezone_str = data['timezone']
             short_tz = data['short']
             gmt_offset = data['gmt_offset']
@@ -288,11 +294,12 @@ def main():
             
             result = {
                 'number': number,
-                'city': city,
+                'state': data['state'],
+                'city': data['city'],
                 'short_tz': short_tz,
                 'gmt_offset': gmt_offset,
                 'local_time': local_time
-            }
+}
             
             if args.convert:
                 corrected_tz_str = get_corrected_timezone(args.convert)
@@ -306,6 +313,7 @@ def main():
         else:
             results.append({
                 'number': number,
+                'state': 'Error: Area code not found',
                 'city': 'Error: Area code not found',
                 'short_tz': '',
                 'gmt_offset': '',
@@ -327,25 +335,26 @@ def main():
     output_data = ''
     convert_label = args.convert.upper() if args.convert else ''
 
-    if args.table:
+    if args.format == 'table':
         output_data = print_table(results, convert_label, args.pretty)
-    elif args.line:
-        output_data = print_line_by_line(results, convert_label, args.pretty)
+    elif args.format == 'list':
+        output_data = print_list(results, convert_label, args.pretty)
     else:
         output_data = print_default(results, convert_label, args.pretty)
-    
+
     if not args.no_banner:
         print_banner()
-    
+
     if args.output:
         write_to_file(output_data, args.output)
         print(f"Output written to: {os.path.abspath(args.output)}")  # Print the file path
-        if args.verbose:
-            print(output_data)
+    if args.verbose:
+        print(output_data)
     else:
         print(output_data)
-        if args.verbose:
-            write_to_file(output_data, 'output.txt')
+    if args.verbose:
+        write_to_file(output_data, 'output.txt')
+
 
 if __name__ == '__main__':
     main()
