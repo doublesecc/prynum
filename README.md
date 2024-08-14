@@ -7,7 +7,7 @@ PryNum is a python tool to check full or partial US phone numbers and specify:
 - The current time of that city
 - The current time of a specified time zone
 
-It has the functionality to print the output in three ways with and withotu colour:
+It has the functionality to print the output in three ways with and without colour:
 - Default
 - List
 - Table
