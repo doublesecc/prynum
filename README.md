@@ -1,38 +1,32 @@
 # PryNum
 ## Overview
-PryNum is a python tool to check provided US phone numbers and specify the city its from, the current time zone and time of that city.
+PryNum is a python tool to check full or partial US phone numbers and specify:
+- The state that the number is from
+- The city that the number is from
+- The current time zone of that city
+- The current time of that city
+- The current time of a specified time zone
 
-It has the functionality to print the current time of the target time zone from time difference comparison.
+It has the functionality to print the output in three ways with and withotu colour:
+- Default
+- List
+- Table
 
-It can print the data in 3 formats and colourise the output for each time zone.
+## Examples
+### Table Format with numbers passed from args
+![image](https://github.com/user-attachments/assets/9214ee0b-c0b3-43e7-86ea-5c97d058e629)
 
-
-Table Format with numbers passed from input file:
-
-
+### List format with numbers from input file:
 ``` bash
 #numbers.txt
-+1-212-555-1234
-3105555678
-+1-3125559012
++1-212-555-1234,first,last
+3105555678 testing
+data+1-3125559012
+a
+bbbb
+cccc22ddddd3
 ```
+![image](https://github.com/user-attachments/assets/96580f59-2656-41fd-ae28-8eb2e831f13b)
 
-![image](https://github.com/user-attachments/assets/ab8996c5-c3f6-4dc2-aea1-c5074c746440)
-
-
-
-Default Format:
-
-![image](https://github.com/user-attachments/assets/5255c394-e67a-43d1-b6e0-c5418502a290)
-
-
-Listed Format:
-
-![image](https://github.com/user-attachments/assets/8e02e321-1f4a-431c-8f6d-90b8b3e14088)
-
-
-Table Format with numbers passed as arguments:
-
-![image](https://github.com/user-attachments/assets/65ab9995-ed4d-4dc5-b000-f3984ccb41b8)
-
-
+### Default format without colour
+![image](https://github.com/user-attachments/assets/6d47c166-0b21-4887-9858-641234d57273)
