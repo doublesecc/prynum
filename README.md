@@ -16,7 +16,7 @@ It has the functionality to print the output in three ways with and without colo
 ### Table Format with numbers passed from args
 ![image](https://github.com/user-attachments/assets/9214ee0b-c0b3-43e7-86ea-5c97d058e629)
 
-### List format with numbers from input file:
+### List format with numbers from input file:
 ``` bash
 #numbers.txt
 +1-212-555-1234,first,last
