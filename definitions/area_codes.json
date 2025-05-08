@@ -280,6 +280,16 @@
         "980": {"state": "North Carolina", "city": "Charlotte", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
         "984": {"state": "North Carolina", "city": "Raleigh", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
         "985": {"state": "Louisiana", "city": "Hammond", "timezone": "America/Chicago", "short": "CST", "gmt_offset": "-6"},
-        "989": {"state": "Michigan", "city": "Saginaw", "timezone": "America/Detroit", "short": "EST", "gmt_offset": "-5"}
-    }
+        "989": {"state": "Michigan", "city": "Saginaw", "timezone": "America/Detroit", "short": "EST", "gmt_offset": "-5"},
+        "800": {"state": "Toll-Free", "city": "Nationwide", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
+        "844": {"state": "Toll-Free", "city": "Nationwide", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
+        "857": {"state": "Massachusetts", "city": "Boston", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
+        "877": {"state": "Toll-Free", "city": "Nationwide", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"},
+        "978": {"state": "Massachusetts", "city": "Lowell", "timezone": "America/New_York", "short": "EST", "gmt_offset": "-5"}
+    },
+    "Invalid_or_Non-US": {
+    "000": {"note": "000 is not a valid area code in the United States."},
+    "144": {"note": "144 is not a valid area code in the United States."},
+    "441": {"note": "441 is the area code for Bermuda, not part of the United States."}
+  }
 }
